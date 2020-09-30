@@ -1,0 +1,49 @@
+kind: SeldonDeployment
+apiVersion: machinelearning.seldon.io/v1
+metadata:
+  name: dssconf2020
+  namespace: seldon
+  labels:
+    model: "nyc-taxi-classifier"
+spec:
+  name: dssconf2020
+  predictors:
+    - name: "default"
+      graph:
+        name: "nyc-taxi-classifier"
+        implementation: "MLFLOW_SERVER"
+        modelUri: "gs://dssconf2020/model"
+        serviceAccountName: user-gcp-sa
+        type: "MODEL"
+      explainer:
+        type: "AnchorTabular"
+        modelUri: "gs://dssconf2020/model"
+        serviceAccountName: user-gcp-sa
+      componentSpecs:
+        - spec:
+            containers:
+              - name: "nyc-taxi-classifier"
+                image: "lulamichal/mlflowserver_rest:1.2.3-0.1.0"
+                livenessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 600
+                  periodSeconds: 5
+                  successThreshold: 1
+                  tcpSocket:
+                    port: http
+                  timeoutSeconds: 10
+                readinessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 600
+                  periodSeconds: 5
+                  successThreshold: 1
+                  tcpSocket:
+                    port: http
+                  timeoutSeconds: 100
+      replicas: 1
+
+#                resources:
+#                  requests:
+#                    memory: "512Mi"
+
+
