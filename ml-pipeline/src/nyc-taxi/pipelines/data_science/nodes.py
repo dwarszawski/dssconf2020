@@ -4,7 +4,8 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+#from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
@@ -47,7 +48,7 @@ def split_data(data: pd.DataFrame, parameters: Dict) -> List:
 
     return [X_train, X_test, y_train, y_test, feature_names]
 
-def train_model(X_train: np.ndarray, y_train: np.ndarray) -> LinearRegression:
+def train_model(X_train: np.ndarray, y_train: np.ndarray) -> LogisticRegression:
     """Train the linear regression model.
         Args:
             X_train: Training data of independent features.
@@ -55,10 +56,8 @@ def train_model(X_train: np.ndarray, y_train: np.ndarray) -> LinearRegression:
         Returns:
             Trained model.
     """
-    regressor = LinearRegression()
+    regressor = LogisticRegression()
     regressor.fit(X_train, y_train)
-
-
 
     artifact_path = mlflow.get_artifact_uri()
     mlflow.sklearn.log_model(regressor, "model")
@@ -68,7 +67,7 @@ def train_model(X_train: np.ndarray, y_train: np.ndarray) -> LinearRegression:
     return regressor
 
 
-def evaluate_model(regressor: LinearRegression, X_test: np.ndarray, y_test: np.ndarray):
+def evaluate_model(regressor: LogisticRegression, X_test: np.ndarray, y_test: np.ndarray):
     """Calculate the coefficient of determination and log the result.
         Args:
             regressor: Trained model.
@@ -83,7 +82,7 @@ def evaluate_model(regressor: LinearRegression, X_test: np.ndarray, y_test: np.n
     # mlflow.log_metric("f1 score", f1_score(y_test, y_pred))
     mlflow.log_metric("r2 score", r2_score(y_test, y_pred))
 
-def train_explainer(regressor: LinearRegression, feature_names: List[str], X_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray):
+def train_explainer(regressor: LogisticRegression, feature_names: List[str], X_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray):
     predict_fn = lambda x: regressor.predict(x)
 
     explainer = AnchorTabular(predict_fn, feature_names)
@@ -97,9 +96,9 @@ def train_explainer(regressor: LinearRegression, feature_names: List[str], X_tra
     mlflow.log_artifact("explainer.dill", "model")
 
     print(np.where(y_test == 1)[0])
-    #probe = np. array([40.316667556762695, 0.5605325219195545, 0.350, 0, 3, 1, 5], dtype=float)
-    probe = np. array(X_test[700], dtype=float)
-    explanation = explainer.explain(probe, threshold=0.2)
+    probe = np. array([40.316667556762695, 0.5605325219195545, 0.350, 0, 3, 1, 5], dtype=float)
+    #probe = np. array(X_test[700], dtype=float)
+    explanation = explainer.explain(probe)
 
     print('Anchor: %s' % (' AND '.join(explanation['names'])))
     print('Precision: %.2f' % explanation['precision'])

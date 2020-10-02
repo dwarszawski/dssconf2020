@@ -71,4 +71,10 @@ def preprocess(dataframe: pd.DataFrame) -> pd.DataFrame:
         'label'
     ]]
 
+    df_pos = dataframe[dataframe.label.eq(1)]
+    df_neg = dataframe[dataframe.label.eq(0)]
+    df_neg = df_neg.head(500)
+
+    dataframe = pd.concat([df_pos, df_neg], ignore_index=True)
+
     return dataframe
